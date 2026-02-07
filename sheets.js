@@ -2,9 +2,13 @@ import fetch from "node-fetch";
 import dotenv from "dotenv";
 dotenv.config();
 
+/* -----------------------------------------------------
+   PARSE CSV → JSON
+------------------------------------------------------ */
 function parseCsv(text) {
   const lines = text.trim().split("\n");
   const headers = lines[0].split(",").map(h => h.trim());
+
   return lines.slice(1).map(line => {
     const cols = line.split(",").map(c => c.trim());
     const obj = {};
@@ -13,26 +17,58 @@ function parseCsv(text) {
   });
 }
 
+/* -----------------------------------------------------
+   READ USERS SHEET (CSV)
+------------------------------------------------------ */
 export async function getUsers() {
-  const res = await fetch(process.env.USERS_SHEET_CSV_URL);
-  return parseCsv(await res.text());
+  const url = process.env.USERS_SHEET_CSV_URL;
+  const res = await fetch(url);
+  const text = await res.text();
+  return parseCsv(text);
 }
 
+/* -----------------------------------------------------
+   READ CASHOUT REWARDS SHEET (CSV)
+------------------------------------------------------ */
 export async function getCashoutRewards() {
-  const res = await fetch(process.env.CASHOUT_SHEET_CSV_URL);
-  return parseCsv(await res.text());
+  const url = process.env.CASHOUT_SHEET_CSV_URL;
+  const res = await fetch(url);
+  const text = await res.text();
+  return parseCsv(text);
 }
 
+/* -----------------------------------------------------
+   READ CODES SHEET (CSV)
+------------------------------------------------------ */
 export async function getCodes() {
-  const res = await fetch(process.env.CODES_SHEET_CSV_URL);
-  return parseCsv(await res.text());
+  const url = process.env.CODES_SHEET_CSV_URL;
+  const res = await fetch(url);
+  const text = await res.text();
+  return parseCsv(text);
 }
 
-// TODO: implement real writes via Google Sheets API or Apps Script
-export async function updateUser(user) {
-  console.log("TODO: update user row in Google Sheets:", user);
+/* -----------------------------------------------------
+   WRITE OPERATIONS (Apps Script)
+------------------------------------------------------ */
+
+const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL;
+
+/**
+ * Update user row in Google Sheets
+ */
+export async function updateUser(userObj) {
+  await fetch(`${APPS_SCRIPT_URL}?action=updateUser`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(userObj)
+  });
 }
 
-export async function markCodeRedeemed(code) {
-  console.log("TODO: mark code redeemed in Google Sheets:", code);
+/**
+ * Mark code as redeemed (TRUE)
+ */
+export async function markCodeRedeemed(codeValue) {
+  await fetch(`${APPS_SCRIPT_URL}?action=redeemCode&code=${encodeURIComponent(codeValue)}`, {
+    method: "POST"
+  });
 }
