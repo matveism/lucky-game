@@ -1,38 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Lucky Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+
+<!-- HEADER WITH LOGO + MINI BUTTONS -->
+<header class="top-header">
+  <div class="logo">LUCKY<span>GAME</span></div>
+
+  <div class="mini-buttons">
+    <button class="mini-btn">🏠</button>
+    <button class="mini-btn">⭐</button>
+    <button class="mini-btn">💰</button>
+    <button class="mini-btn">🎲</button>
+    <button class="mini-btn">⚙️</button>
+  </div>
+</header>
 
 <h2>Lucky Game Dashboard</h2>
 
+<!-- USER LOGIN -->
 <div class="section">
   <h3>Enter User ID</h3>
   <input id="userid" placeholder="Enter your userid">
   <button onclick="loadBalances()">Load Balances</button>
 </div>
 
+<!-- BALANCES -->
 <div class="section">
   <h3>Your Balances</h3>
   <p>Play Balance: <span id="play_balance">-</span></p>
   <p>Cashout Balance: <span id="cashout_balance">-</span></p>
 </div>
 
+<!-- LOCKED CONTENT -->
 <div class="section">
   <h3>Locked Content</h3>
   <p id="locked_message">Complete a survey and redeem to unlock your code.</p>
   <p id="unlocked_code" style="display:none;"></p>
 </div>
 
+<!-- REDEEM CODE -->
 <div class="section">
   <h3>Redeem Code ($1.00)</h3>
   <button onclick="redeemCode()">Redeem</button>
   <p id="redeem_result"></p>
 </div>
 
+<!-- LUCKY GAME -->
 <div class="section">
   <h3>Play Lucky Number Game</h3>
   <p>Select numbers (1–6):</p>
@@ -41,6 +60,7 @@
   <p id="lucky_result"></p>
 </div>
 
+<!-- CASHOUT REWARDS -->
 <div class="section">
   <h3>Cashout Rewards</h3>
   <button onclick="loadRewards()">Load Rewards</button>
@@ -102,14 +122,17 @@ async function playLucky() {
 
   document.getElementById("lucky_result").innerText =
     `Draw: ${data.draw.join(", ")} | Matches: ${data.matches} | Prize: $${data.prize}`;
+
   loadBalances();
 }
 
 async function loadRewards() {
   const res = await fetch("/api/cashout-rewards");
   const rewards = await res.json();
+
   const list = document.getElementById("rewards_list");
   list.innerHTML = "";
+
   rewards.forEach(r => {
     const li = document.createElement("li");
     li.innerText = `${r.reward_name} - Cost: $${r.cashout_balance_cost}`;
