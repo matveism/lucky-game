@@ -7,6 +7,56 @@ body {
   border-radius: 10px;
 }
 
+/* HEADER */
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #222;
+  padding: 12px 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  color: #ffd700;
+}
+
+.logo span {
+  color: white;
+}
+
+/* MINI BUTTONS */
+.mini-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.mini-btn {
+  background: #333;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.mini-btn:hover {
+  background: #444;
+}
+
+/* SECTIONS */
+.section {
+  background: white;
+  padding: 15px;
+  margin-top: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
 input, button {
   padding: 10px;
   margin: 5px 0;
@@ -14,10 +64,14 @@ input, button {
   font-size: 16px;
 }
 
-.section {
-  background: white;
-  padding: 15px;
-  margin-top: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+button {
+  background: #222;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #333;
 }
