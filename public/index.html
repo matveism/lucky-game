@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Lucky Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Lucky Game Dashboard</h2>
+
+<div class="section">
+  <h3>Enter User ID</h3>
+  <input id="userid" placeholder="Enter your userid">
+  <button onclick="loadBalances()">Load Balances</button>
+</div>
+
+<div class="section">
+  <h3>Your Balances</h3>
+  <p>Play Balance: <span id="play_balance">-</span></p>
+  <p>Cashout Balance: <span id="cashout_balance">-</span></p>
+</div>
+
+<div class="section">
+  <h3>Locked Content</h3>
+  <p id="locked_message">Complete a survey and redeem to unlock your code.</p>
+  <p id="unlocked_code" style="display:none;"></p>
+</div>
+
+<div class="section">
+  <h3>Redeem Code ($1.00)</h3>
+  <button onclick="redeemCode()">Redeem</button>
+  <p id="redeem_result"></p>
+</div>
+
+<div class="section">
+  <h3>Play Lucky Number Game</h3>
+  <p>Select numbers (1–6):</p>
+  <input id="numbers" placeholder="Example: 1,2,3">
+  <button onclick="playLucky()">Play</button>
+  <p id="lucky_result"></p>
+</div>
+
+<div class="section">
+  <h3>Cashout Rewards</h3>
+  <button onclick="loadRewards()">Load Rewards</button>
+  <ul id="rewards_list"></ul>
+</div>
+
+<script>
+async function loadBalances() {
+  const userid = document.getElementById("userid").value;
+  if (!userid) return alert("Enter userid");
+
+  const res = await fetch("/api/get-user?userid=" + encodeURIComponent(userid));
+  const data = await res.json();
+  if (data.error) return alert(data.error);
+
+  document.getElementById("play_balance").innerText = data.play_balance;
+  document.getElementById("cashout_balance").innerText = data.cashout_balance;
+}
+
+async function redeemCode() {
+  const userid = document.getElementById("userid").value;
+  if (!userid) return alert("Enter userid");
+
+  const res = await fetch("/api/redeem-code", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userid })
+  });
+
+  const data = await res.json();
+  if (data.error) {
+    document.getElementById("redeem_result").innerText = data.error;
+    return;
+  }
+
+  document.getElementById("redeem_result").innerText = `Redeemed. Added $${data.added}`;
+  document.getElementById("locked_message").style.display = "none";
+  document.getElementById("unlocked_code").style.display = "block";
+  document.getElementById("unlocked_code").innerText = "Your Code: " + data.code;
+
+  loadBalances();
+}
+
+async function playLucky() {
+  const userid = document.getElementById("userid").value;
+  const nums = document.getElementById("numbers").value.split(",").map(n => n.trim());
+
+  const res = await fetch("/api/play-lucky", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userid, numbers: nums })
+  });
+
+  const data = await res.json();
+  if (data.error) {
+    document.getElementById("lucky_result").innerText = data.error;
+    return;
+  }
+
+  document.getElementById("lucky_result").innerText =
+    `Draw: ${data.draw.join(", ")} | Matches: ${data.matches} | Prize: $${data.prize}`;
+  loadBalances();
+}
+
+async function loadRewards() {
+  const res = await fetch("/api/cashout-rewards");
+  const rewards = await res.json();
+  const list = document.getElementById("rewards_list");
+  list.innerHTML = "";
+  rewards.forEach(r => {
+    const li = document.createElement("li");
+    li.innerText = `${r.reward_name} - Cost: $${r.cashout_balance_cost}`;
+    list.appendChild(li);
+  });
+}
+</script>
+
+</body>
+</html>
