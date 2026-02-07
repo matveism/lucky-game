@@ -3,12 +3,11 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 dotenv.config();
 
+import fetch from "node-fetch";
 import {
   getUsers,
   getCashoutRewards,
-  getCodes,
-  updateUser,
-  markCodeRedeemed
+  getCodes
 } from "./sheets.js";
 
 const app = express();
@@ -16,6 +15,11 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL;
+
+/* -----------------------------------------------------
+   HELPERS
+------------------------------------------------------ */
 function toMoney(v) {
   return Number(v || 0);
 }
@@ -25,7 +29,26 @@ async function findUser(userid) {
   return users.find(u => u.userid === String(userid));
 }
 
-/* CPX CALLBACK */
+/* -----------------------------------------------------
+   WRITE TO GOOGLE SHEETS (Apps Script)
+------------------------------------------------------ */
+async function updateUser(userObj) {
+  await fetch(`${APPS_SCRIPT_URL}?action=updateUser`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(userObj)
+  });
+}
+
+async function markCodeRedeemed(codeValue) {
+  await fetch(`${APPS_SCRIPT_URL}?action=redeemCode&code=${encodeURIComponent(codeValue)}`, {
+    method: "POST"
+  });
+}
+
+/* -----------------------------------------------------
+   1) CPX CALLBACK → adds survey earnings to cashout balance
+------------------------------------------------------ */
 app.post("/cpx/callback", async (req, res) => {
   const userId = req.body.ext_user_id;
   const payout = Number(req.body.payout || 0);
@@ -40,7 +63,9 @@ app.post("/cpx/callback", async (req, res) => {
   res.send("OK");
 });
 
-/* REDEEM CODE */
+/* -----------------------------------------------------
+   2) REDEEM CODE ($1.00 MINIMUM)
+------------------------------------------------------ */
 app.post("/api/redeem-code", async (req, res) => {
   const userId = req.body.userid;
   const user = await findUser(userId);
@@ -72,7 +97,9 @@ app.post("/api/redeem-code", async (req, res) => {
   });
 });
 
-/* LUCKY GAME */
+/* -----------------------------------------------------
+   3) LUCKY NUMBER GAME
+------------------------------------------------------ */
 function random6() {
   return Array.from({ length: 6 }, () => Math.floor(Math.random() * 6) + 1);
 }
@@ -133,7 +160,9 @@ app.post("/api/play-lucky", async (req, res) => {
   });
 });
 
-/* GET USER */
+/* -----------------------------------------------------
+   4) GET USER BALANCES
+------------------------------------------------------ */
 app.get("/api/get-user", async (req, res) => {
   const user = await findUser(req.query.userid);
   if (!user) return res.json({ error: "User not found" });
@@ -145,11 +174,16 @@ app.get("/api/get-user", async (req, res) => {
   });
 });
 
-/* CASHOUT REWARDS */
+/* -----------------------------------------------------
+   5) CASHOUT REWARDS
+------------------------------------------------------ */
 app.get("/api/cashout-rewards", async (req, res) => {
   res.json(await getCashoutRewards());
 });
 
+/* -----------------------------------------------------
+   SERVER START
+------------------------------------------------------ */
 app.get("/", (req, res) => {
   res.send("Lucky Game API Running");
 });
